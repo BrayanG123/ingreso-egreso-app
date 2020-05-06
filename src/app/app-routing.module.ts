@@ -4,6 +4,7 @@ import { LoginComponent } from './auth/login/login.component';
 import { RegisterComponent } from './auth/register/register.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { dashboardRoutes } from './dashboard/dashboard.routes';
+import { AuthGuard } from './services/auth.guard';
 
 
 const routes: Routes = [
@@ -12,7 +13,8 @@ const routes: Routes = [
     { 
         path: '',        
         component: DashboardComponent,
-        children: dashboardRoutes   //children recibe una coleccion de rutas       
+        children: dashboardRoutes,   //children recibe una coleccion de rutas 
+        canActivate: [ AuthGuard ]      
     },
     { path: '**', redirectTo: ''},
 ];
