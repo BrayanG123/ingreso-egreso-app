@@ -9,7 +9,9 @@ import { Subscription } from 'rxjs';
 import { Usuario } from '../models/usuario.model';
 import { Store } from '@ngrx/store';
 import { AppState } from '../app.reducer';
+
 import * as authActions from '../auth/auth.actions';
+import * as ingresoEgresoActions from '../ingreso-egreso/ingreso-egreso.actions';
 
 @Injectable({
   providedIn: 'root'
@@ -17,6 +19,12 @@ import * as authActions from '../auth/auth.actions';
 export class AuthService {
 
   userSubsciption: Subscription;
+  private _user: Usuario; //para tener acceso rapido a todas las propiedades del usuario SOLO PARA FINES DE LECTURA!!
+
+  get user(){ 
+    //return {... this._user }; //para prevenir mutaciones o cualquier otra cosa
+    return this._user; //pero no hay relaciones directas con este usuario asi q asi lo dejamos (queda a discrecion de nosotros)
+  }
 
   constructor( public auth: AngularFireAuth,
                private firestore: AngularFirestore,
@@ -30,16 +38,20 @@ export class AuthService {
       if ( fuser ) { //si existe el usuario
 
         this.userSubsciption = this.firestore.doc(`${fuser.uid}/usuario`).valueChanges()
-                .subscribe( (firestoreUser: any) => {
-                          
-                  const user = Usuario.formFirebase( firestoreUser );      
-                  this.store.dispatch( authActions.setUser({ user })); 
-      
-                } )
+          .subscribe( (firestoreUser: any) => {
+                    
+            const user = Usuario.formFirebase( firestoreUser );    
+            this._user = user //'this.user' se va actualizar cuando ya tengo el usuario  
+            this.store.dispatch( authActions.setUser({ user })); 
+            
+          } )
 
       }else{ //si no existe el usuario
+        this._user = null;//tambien hay q limpiarlo cuando hacemos unsuscribe
         this.userSubsciption.unsubscribe();
         this.store.dispatch( authActions.unSetUser()); 
+        this.store.dispatch( ingresoEgresoActions.unSetItems() );
+        //todo esto es para purgar
       }          
     } )
 
